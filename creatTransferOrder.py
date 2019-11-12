@@ -422,7 +422,6 @@ def doWork(readFilepath,outFilepath,sheetType,beginColForTypeTwo):
     newWb.save(outFilepath)
 
 def myUnion():
-    readFilepath = all_input_path_ui.get()
     outFilepath = save_path_ui.get()
     dictInfo = dict()
     finalAllInputFiles = []
