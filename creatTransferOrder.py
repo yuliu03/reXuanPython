@@ -28,13 +28,20 @@ from tkinter import filedialog
 
 ########常量#############
 #读取文件内容字段抬头起始行
+from openpyxl.styles import Font, Border, Side, Alignment
+
+#单据创建时间
+orderCreatedTime = ""
+#单据主要标题
+orderTitle="云商热选佳成仓库产品调拨单"
+#结果单据起始行
 resultBeginRow = 1
 #出库类型
 transType = "门店调拨"
 #出库地点
 outputPlace = ""
 #出库联系人
-outputPlaceName = ""
+outputPlaceName = "郭正峰"
 #出库联系人电话
 outputPlaceContact = ""
 #到达时间
@@ -134,20 +141,20 @@ def file_name(file_dir):
 
 
 #获取个性化最大列数，只读取第2列，最大列数为第一个空白cell
-def personal_max_col(sheet):
+def personal_max_col(sheet,beginRow=1):
     count = 2
-    while sheet.cell(row=1, column=count).value != None and\
-            sheet.cell(row=1, column=count).value != "None" and \
-            sheet.cell(row=1, column=count).value != "" :
+    while sheet.cell(row=beginRow, column=count).value != None and\
+            sheet.cell(row=beginRow, column=count).value != "None" and \
+            sheet.cell(row=beginRow, column=count).value != "" :
         count = count + 1
     return count-1
 
-#获取个性化最大列数，只读取第一行
-def personal_max_row(sheet):
+#获取个性化最大行数，只读取第一列
+def personal_max_row(sheet,beginCol=1):
     count = 1
-    while sheet.cell(row=count, column=1).value != None and\
-            sheet.cell(row=count, column=1).value != "None" and \
-            sheet.cell(row=count, column=1).value != "" :
+    while sheet.cell(row=count, column=beginCol).value != None and\
+            sheet.cell(row=count, column=beginCol).value != "None" and \
+            sheet.cell(row=count, column=beginCol).value != "" :
         count = count + 1
 
     tmpValue = str(sheet.cell(row=count-1, column=1).value)
@@ -334,6 +341,16 @@ def getDirectionByStore(store):
         return yiWuDirection
 
 def doWork(readFilepath,outFilepath,sheetType,beginColForTypeTwo):
+    #style 准备
+    # 边框style准备
+    side = Side(border_style='thin', color='000000')
+    border = Border(left=side,
+                    right=side,
+                    top=side,
+                    bottom=side)
+
+    aligmentCenter = Alignment(horizontal='center', vertical ='center')
+
     # 默认可读写，若有需要可以指定write_only和read_only为True
     wb = load_workbook(readFilepath)
 
@@ -347,6 +364,9 @@ def doWork(readFilepath,outFilepath,sheetType,beginColForTypeTwo):
 
     #输出结果#####################################################################################
     newWb = Workbook()
+
+
+
     #创建sheet
     tmpCount = 0
     for key in result.keys():
@@ -354,30 +374,43 @@ def doWork(readFilepath,outFilepath,sheetType,beginColForTypeTwo):
 
         #填写字段抬头
         beginRow = 1
-        newSheet.cell(row=beginRow,column=1,value=code)
-        newSheet.cell(row=beginRow,column=2,value=name)
-        newSheet.cell(row=beginRow,column=3,value=unit)
-        newSheet.cell(row=beginRow,column=4,value=specification)
-        newSheet.cell(row=beginRow,column=5,value=store)
-        newSheet.cell(row=beginRow,column=6,value=orderNum)
-        newSheet.cell(row=beginRow, column=7, value=realNum)
+        newSheet.cell(row=beginRow,column=1,value=code).border=border
+        newSheet.cell(row=beginRow,column=2,value=name).border=border
+        newSheet.cell(row=beginRow,column=3,value=unit).border=border
+        newSheet.cell(row=beginRow,column=4,value=specification).border=border
+        newSheet.cell(row=beginRow,column=5,value=store).border=border
+        newSheet.cell(row=beginRow,column=6,value=orderNum).border=border
+        newSheet.cell(row=beginRow, column=7, value=realNum).border=border
 
         #填写每个sheet（门店）的内容
         infoList = result[key]
         listSize = len(infoList)
         listCount = 0
         while listCount < listSize:
-            newSheet.cell(row=listCount + 2, column=1, value=infoList[listCount][0])#国际条码
-            newSheet.cell(row=listCount + 2, column=2, value=infoList[listCount][1])#商品名称
-            newSheet.cell(row=listCount + 2, column=3, value=infoList[listCount][2])#单位
-            newSheet.cell(row=listCount + 2, column=4, value=infoList[listCount][3])#规格
-            newSheet.cell(row=listCount + 2, column=5, value=infoList[listCount][4])#调拨门店
-            newSheet.cell(row=listCount + 2, column=6, value=infoList[listCount][5])#调拨数量
-
+            newSheet.cell(row=listCount + 2, column=1, value=infoList[listCount][0]).border=border#国际条码
+            newSheet.cell(row=listCount + 2, column=2, value=infoList[listCount][1]).border=border#商品名称
+            newSheet.cell(row=listCount + 2, column=3, value=infoList[listCount][2]).border=border#单位
+            newSheet.cell(row=listCount + 2, column=4, value=infoList[listCount][3]).border=border#规格
+            newSheet.cell(row=listCount + 2, column=5, value=infoList[listCount][4]).border=border#调拨门店
+            newSheet.cell(row=listCount + 2, column=6, value=infoList[listCount][5]).border=border#调拨数量
+            newSheet.cell(row=listCount + 2, column=7).border = border  # 实际调拨数量
             listCount = listCount + 1
 
-        newSheet.cell(row=listCount + 2, column=1, value="合计")  # 合计
-        newSheet.cell(row=listCount + 3, column=1, value="合计装箱数（箱）")  # 合计装箱数（箱）
+
+        #插入一列
+        newSheet.insert_cols(1,1)
+        newSheet.cell(row=1, column=1, value="序号")  # 序号
+        count = 2
+        while count < listCount + 2:
+            newSheet.cell(row=count, column=1, value=count - 1).border=border  # 合计
+            count =count + 1
+
+
+        newSheet.cell(row=listCount + 2, column=1, value="合计").border=Border(left=side)  # 合计
+        newSheet.cell(row=listCount + 2, column=8).border = Border(right=side)
+        newSheet.cell(row=listCount + 3, column=1, value="合计装箱数（箱）").border=Border(left=side)  # 合计装箱数（箱）
+        newSheet.cell(row=listCount + 3, column=8).border = Border(right=side)
+
 
 
         otherInfoKeyValueList=[("出库类型",transType),
@@ -387,23 +420,55 @@ def doWork(readFilepath,outFilepath,sheetType,beginColForTypeTwo):
                                ("到货地点",getDirectionByStore(key)),
                                ("联系人姓名",getDirectorByStore(key)),
                                 ("联系人电话",getContactByStore(key)),
-                                ("要求到达时间",arriveTime),
-                               ("调拨单号",outFilepath.split("/")[len(outFilepath.split("/")) - 1])]
+                                ("要求到达时间",arriveTime)]
+                               # ("调拨单号",outFilepath.split("/")[len(outFilepath.split("/")) - 1])]
 
         specialIndex = 4
         for item in otherInfoKeyValueList:
-            newSheet.cell(row=listCount + specialIndex, column=1, value=item[0])
+            newSheet.cell(row=listCount + specialIndex, column=1, value=item[0]).border=Border(left=side)
+            newSheet.cell(row=listCount + specialIndex, column=8).border = Border(right=side)
             newSheet.cell(row=listCount + specialIndex, column=2, value=item[1])
             specialIndex = specialIndex + 1
 
-        # 格式处理
-        newSheet.column_dimensions['A'].width = 20  # 国际条码
-        newSheet.column_dimensions['B'].width = 50  # 商品名称
-        newSheet.column_dimensions['C'].width = 15  # 单位
-        newSheet.column_dimensions['D'].width = 15  # 规格
-        newSheet.column_dimensions['E'].width = 15  # 调拨门店
-        newSheet.column_dimensions['F'].width = 15  # 调拨数量
-        newSheet.column_dimensions['G'].width = 30  # 实际调拨数量
+        ####新增一行顶行表头
+        newSheet.insert_rows(1)
+        # 合并单元格,制作表头
+        titleCount = 1
+        while titleCount <= 8:
+            newSheet.cell(row=1, column=titleCount).border = border
+            titleCount  = titleCount + 1
+
+        newSheet.merge_cells(start_row=1, start_column=1, end_row=1, end_column=8)
+        newSheet.cell(row=1, column=1,value=orderTitle+orderCreatedTime).border = border
+        newSheet.cell(row=1, column=1).alignment = aligmentCenter
+
+        ######### 格式处理
+        #添加底部边框
+        bottomCount = 1
+        maxCol = personal_max_col(newSheet,2)
+        lastRowPos = listCount + specialIndex
+        while bottomCount <= maxCol:
+            newSheet.cell(row=lastRowPos, column=bottomCount).border = Border(bottom=side)
+            bottomCount = bottomCount + 1
+
+
+
+        #序号
+        newSheet.column_dimensions['A'].width = 15
+        # 国际条码
+        newSheet.column_dimensions['B'].width = 20
+        # 商品名称
+        newSheet.column_dimensions['C'].width = 50
+        # 单位
+        newSheet.column_dimensions['D'].width = 15
+        # 规格
+        newSheet.column_dimensions['E'].width = 15
+        # 调拨门店
+        newSheet.column_dimensions['F'].width = 15
+        # 调拨数量
+        newSheet.column_dimensions['G'].width = 15
+        # 实际调拨数量
+        newSheet.column_dimensions['H'].width = 30
 
         tmpCount = tmpCount + 1
 
@@ -491,14 +556,15 @@ def myUnion():
 
 
         # 格式处理
-        newSheet.column_dimensions['A'].width = 20  # 国际条码
-        newSheet.column_dimensions['B'].width = 50  # 商品名称
-        newSheet.column_dimensions['C'].width = 15  # 单位
-        newSheet.column_dimensions['D'].width = 15  # 规格
-        newSheet.column_dimensions['E'].width = 15  # 调拨门店
-        newSheet.column_dimensions['F'].width = 15  # 调拨数量
-        newSheet.column_dimensions['G'].width = 30  # 供应商
-        newSheet.column_dimensions['H'].width = 30  # 实际调拨数量
+        #调整宽度
+        newSheet.column_dimensions['B'].width = 20  # 国际条码
+        newSheet.column_dimensions['C'].width = 50  # 商品名称
+        newSheet.column_dimensions['D'].width = 15  # 单位
+        newSheet.column_dimensions['E'].width = 15  # 规格
+        newSheet.column_dimensions['F'].width = 15  # 调拨门店
+        newSheet.column_dimensions['G'].width = 15  # 调拨数量
+        newSheet.column_dimensions['H'].width = 30  # 供应商
+        newSheet.column_dimensions['I'].width = 30  # 实际调拨数量
 
         tmpCount = tmpCount + 1
 
@@ -592,7 +658,9 @@ def getInputPath():
 
 
     # makeMyDir(filtPath+"/output")
-    save_path_ui.insert(0,filtPath + strftime("%Y%m%d%H%M%S", localtime()) + tmpPathByList[size])
+    global orderCreatedTime
+    orderCreatedTime = strftime("%Y%m%d%H%M%S", localtime())
+    save_path_ui.insert(0,filtPath + orderCreatedTime + tmpPathByList[size])
 
 
 

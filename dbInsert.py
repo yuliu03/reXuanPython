@@ -171,10 +171,12 @@ for order_name in filesNameList:
         tmpPoint = separatedRow-1
         tmpInfo = str(actualSheet.cell(row=tmpPoint,column=1).value)
 
+        allNumInBox = ""
         #获取主信息最后一行位置
         while tmpInfo is None or tmpInfo == "" or tmpInfo == "None" or "合计" in tmpInfo:
             tmpPoint = tmpPoint - 1#默认商品信息最后一行和“出库类型信息”这一行只相差一行
             tmpInfo = str(actualSheet.cell(row=tmpPoint, column=1).value)
+
             if "合计装箱数" in tmpInfo:
                 allNumInBox = str(actualSheet.cell(row=tmpPoint, column=2).value)
 
