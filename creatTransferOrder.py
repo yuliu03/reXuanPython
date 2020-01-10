@@ -34,8 +34,10 @@ from openpyxl.styles import Font, Border, Side, Alignment
 orderCreatedTime = ""
 #单据主要标题
 orderTitle="云商热选佳成仓库产品调拨单"
-#结果单据起始行
+#结果单据起始行用于生成调拨单
 resultBeginRow = 1
+#结果单据起始行用于合并调拨单
+resultBeginRowToUnion = 2
 #出库类型
 transType = "门店调拨"
 #出库地点
@@ -53,8 +55,8 @@ tianDiContact = "13777516196"
 tianDiDirection = "杭州市江干区九和路28号物产天地园区一号楼一楼热选店"
 
 #集团
-jiTuanDirector = "任苏颖"
-jiTuanContact = "15858112811"
+jiTuanDirector = "王利平"
+jiTuanContact = "13456131607"
 jiTuanDirection = "杭州下城区环城西路56号物产中大集团一楼食堂热选店"
 
 #国际
@@ -63,8 +65,8 @@ guoJiContact = "18167116198"
 guoJiDirection = "杭州市江干区凯旋路445号物产国际大厦4楼热选店"
 
 #江干
-jiangGanDirector = "毛聪聪"
-jiangGanContact = "15726830081"
+jiangGanDirector = "杨清清"
+jiangGanContact = "13588049651"
 jiangGanDirection = "杭州市江干区庆春东路1号江干区人民政府北楼东厅热选店"
 
 #省委党校
@@ -78,8 +80,8 @@ shangChengQuContact = "15925673320"
 shangChengQuDirection = "杭州市上城区望潮路77号上城区人民政府东楼4楼食堂热选店"
 
 #杭州市政府
-hangZhouShiZhengFuDirector = "徐燕"
-hangZhouShiZhengFuContact = "13958148068"
+hangZhouShiZhengFuDirector = "姚飞航"
+hangZhouShiZhengFuContact = "13666548755"
 hangZhouShiZhengFuDirection = "杭州市江干区解放东路18号杭州市人民政府负1楼商业中心热选店"
 
 #临安
@@ -90,7 +92,38 @@ linAnDirction = "浙江省杭州市临安区衣锦街398号"
 #义乌
 yiWuDirector = "徐鑫"
 yiWuContact = "13735318305"
-yiWuDirection = "义乌市国际商贸城五区进口城1楼101号门2街60567商铺"
+yiWuDirection = "义乌市国际商贸城五区进口城1楼102号门2街60567商铺"
+
+#武义
+wuYiDirector = "岳动"
+wuYiContact = "18758233443"
+wuYiDirection = "金华市武义县县前街25号1楼热选门店"
+
+#庆春
+qinChunDirector = "姚飞航"
+qinChunContact = "13666548755"
+qinChunDirection = "庆春路东路87号"
+
+#萧山国家电网
+xiaoShanGuoWangDirector = "岳动"
+xiaoShanGuoWangContact = "18758233443"
+xiaoShanGuoWangDirection = "红垦路318号"
+
+#萧山国家电网
+huanNengDirector = "徐艳"
+huanNengContact = "13958148068"
+huanNengDirection = "庆春路137号，华都大厦三楼热选超市"
+
+#中大广场
+zhongDaGuangChangDirector = "备货"
+zhongDaGuangChangContact = "备货"
+zhongDaGuangChangDirection = "备货"
+
+#其他
+otherDirector = ""
+otherContact = ""
+otherDirection = ""
+
 
 #页脚总计
 countNum = "合计"
@@ -105,6 +138,7 @@ store = "调拨门店"
 orderNum = "调拨数量"
 realNum = "实际可调拨数量（仓库填写）"
 supplier = "供应商"
+orderId = "订单id"
 
 def makeMyDir(path):
     # 去除首位空格
@@ -150,8 +184,8 @@ def personal_max_col(sheet,beginRow=1):
     return count-1
 
 #获取个性化最大行数，只读取第一列
-def personal_max_row(sheet,beginCol=1):
-    count = 1
+def personal_max_row(sheet,beginCol=1,beginRow=1):
+    count = beginRow
     while sheet.cell(row=count, column=beginCol).value != None and\
             sheet.cell(row=count, column=beginCol).value != "None" and \
             sheet.cell(row=count, column=beginCol).value != "" :
@@ -172,7 +206,7 @@ def getValue(sheet,row,col):
 
 #根据字段抬头获取位置,未找到返回-1
 def getIndex(name,sheet,beginRow):
-    maxCol = personal_max_col(sheet)
+    maxCol = personal_max_col(sheet,beginRow)#从第二行判断
     index= -1
     count = 1
     while count <= maxCol:
@@ -289,7 +323,7 @@ def getDirectorByStore(store):
         return jiangGanDirector
     elif   "党校"in store:
         return shengWeiDangXiaoDirector
-    elif   "上城区"in store:
+    elif   "上城"in store:
         return shangChengQuDirector
     elif   "市政府"in store or "市民中心" in store:
         return hangZhouShiZhengFuDirector
@@ -297,6 +331,18 @@ def getDirectorByStore(store):
         return linAnDirector
     elif "义乌" in store:
         return yiWuDirector
+    elif "武义" in store:
+        return wuYiDirector
+    elif "庆春" in store:
+        return qinChunDirector
+    elif "萧山" in store:
+        return xiaoShanGuoWangDirector
+    elif "环能" in store:
+        return huanNengDirector
+    elif "中大" in store:
+        return zhongDaGuangChangDirector
+    else:
+        return otherDirector
 
 #根据店名获取联系方式
 def getContactByStore(store):
@@ -318,6 +364,18 @@ def getContactByStore(store):
         return linAnContact
     elif "义乌" in store:
         return yiWuContact
+    elif "武义" in store:
+        return wuYiContact
+    elif "庆春" in store:
+        return qinChunContact
+    elif "萧山" in store:
+        return xiaoShanGuoWangContact
+    elif "环能" in store:
+        return huanNengContact
+    elif "中大" in store:
+        return zhongDaGuangChangContact
+    else:
+        return otherContact
 
 #根据店名获取地址
 def getDirectionByStore(store):
@@ -339,6 +397,18 @@ def getDirectionByStore(store):
         return linAnDirction
     elif "义乌" in store:
         return yiWuDirection
+    elif "武义" in store:
+        return wuYiDirection
+    elif "庆春" in store:
+        return qinChunDirection
+    elif "萧山" in store:
+        return xiaoShanGuoWangDirection
+    elif "环能" in store:
+        return huanNengDirection
+    elif "中大" in store:
+        return zhongDaGuangChangDirection
+    else:
+        return otherDirection
 
 def doWork(readFilepath,outFilepath,sheetType,beginColForTypeTwo):
     #style 准备
@@ -497,7 +567,7 @@ def myUnion():
 
         for path in allFiles:
             finalAllInputFiles.append(readFilepath + path)
-            dictInfo = myUnionAux(readFilepath + path,resultBeginRow,dictInfo)
+            dictInfo = myUnionAux(readFilepath + path,resultBeginRowToUnion,dictInfo)
 
     print(dictInfo)
     result = dictInfo
@@ -509,28 +579,32 @@ def myUnion():
         newSheet = newWb.create_sheet(title=key,index=tmpCount)
 
         #填写字段抬头
-        beginRow = 1
-        newSheet.cell(row=beginRow,column=1,value=code)
-        newSheet.cell(row=beginRow,column=2,value=name)
-        newSheet.cell(row=beginRow,column=3,value=unit)
-        newSheet.cell(row=beginRow,column=4,value=specification)
-        newSheet.cell(row=beginRow,column=5,value=store)
-        newSheet.cell(row=beginRow,column=6,value=orderNum)
-        newSheet.cell(row=beginRow, column=7, value=supplier)
-        newSheet.cell(row=beginRow,column=8,value=realNum)
+        beginRow = 2
+        newSheet.cell(row=beginRow,column=1,value=code) #国际条码
+        newSheet.cell(row=beginRow,column=2,value=name) #商品名称
+        newSheet.cell(row=beginRow,column=3,value=unit) #单位
+        newSheet.cell(row=beginRow,column=4,value=specification) #规格
+        newSheet.cell(row=beginRow,column=5,value=store)  #门店
+        newSheet.cell(row=beginRow,column=6,value=orderNum)  #调拨数量
+        newSheet.cell(row=beginRow,column=7,value=realNum) #实际调拨数量
+        newSheet.cell(row=beginRow,column=8,value=orderId) #订单名称
+        newSheet.cell(row=beginRow, column=9, value=supplier) #供应商名称
 
         #填写每个sheet（门店）的内容
         infoList = result[key]
-        listSize = len(infoList)
-        listCount = 0
+        listSize = len(infoList)+2
+        listCount = beginRow
         while listCount < listSize:
-            newSheet.cell(row=listCount + 2, column=1, value=infoList[listCount][0])#国际条码
-            newSheet.cell(row=listCount + 2, column=2, value=infoList[listCount][1])#商品名称
-            newSheet.cell(row=listCount + 2, column=3, value=infoList[listCount][2])#单位
-            newSheet.cell(row=listCount + 2, column=4, value=infoList[listCount][3])#规格
-            newSheet.cell(row=listCount + 2, column=5, value=infoList[listCount][4])#调拨门店
-            newSheet.cell(row=listCount + 2, column=6, value=infoList[listCount][5])#调拨数量
-            newSheet.cell(row=listCount + 2, column=7, value=infoList[listCount][6])  # 供应商
+            newSheet.cell(row=listCount, column=1, value=infoList[listCount][0])#国际条码
+            newSheet.cell(row=listCount, column=2, value=infoList[listCount][1])#商品名称
+            newSheet.cell(row=listCount, column=3, value=infoList[listCount][2])#单位
+            newSheet.cell(row=listCount, column=4, value=infoList[listCount][3])#规格
+            newSheet.cell(row=listCount, column=5, value=infoList[listCount][4])#调拨门店
+            newSheet.cell(row=listCount, column=6, value=infoList[listCount][5])#调拨数量
+            newSheet.cell(row=listCount, column=7, value=infoList[listCount][6])  #实际调拨数量
+            newSheet.cell(row=listCount, column=8, value=infoList[listCount][7])  #订单名称
+
+
 
             listCount = listCount + 1
 
@@ -591,26 +665,28 @@ def myUnionAux(readFilepath,beginRow,dictInfo):
     # 默认可读写，若有需要可以指定write_only和read_only为True
     wb = load_workbook(readFilepath)
 
-    # 获得当前正在显示的sheet, 也可yue以用wb.get_active_sheet()
+    # 获得当前正在显示的sheet, 也可以用wb.get_active_sheet()
     sheet = wb.active
 
     # Map<key=门店名，值=list<(国际条码，商品名称，单位，规格，调拨门店，调拨数量)>>
     # type,sheet,beginRow,beginColToStore=None
-    maxRow = personal_max_row(sheet)
+    maxRow = personal_max_row(sheet,beginRow=2)
     count = beginRow + 1
 
     # 获取品名col位置
     productNameIndex = getIndex("名", sheet, beginRow)
     # 获取规格col位置
     detailIndex = getIndex("规格", sheet, beginRow)
-    # 获取数量col位置
-    productSizeIndex = getIndex("数量", sheet, beginRow)
+    # 获取调拨数量col位置
+    productSizeIndex = getIndex("调拨数量", sheet, beginRow)
     # 获取条形码col位置
     codeIndex = getIndex("码", sheet, beginRow)
     # 门店位置
     shopIndex = getIndex("门店", sheet, beginRow)
     # 单位位置
     unitIndex = getIndex("单位", sheet, beginRow)
+    # 获取调拨数量col位置
+    realProductSizeIndex = getIndex("实际可调拨数量", sheet, beginRow)
 
     while count <= maxRow:
         # 判断门店
@@ -625,6 +701,7 @@ def myUnionAux(readFilepath,beginRow,dictInfo):
             getValue(sheet, count, detailIndex),
             getValue(sheet, count, shopIndex),
             getValue(sheet, count, productSizeIndex),
+            getValue(sheet, count, realProductSizeIndex),
             orderName
         ))
 
