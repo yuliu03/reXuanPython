@@ -115,14 +115,19 @@ huanNengContact = "13958148068"
 huanNengDirection = "庆春路137号，华都大厦三楼热选超市"
 
 #中大广场
-zhongDaGuangChangDirector = "备货"
-zhongDaGuangChangContact = "备货"
-zhongDaGuangChangDirection = "备货"
+zhongDaGuangChangDirector = "马纳"
+zhongDaGuangChangContact = "13777433171"
+zhongDaGuangChangDirection = "中大广场"
 
-#其他
-otherDirector = ""
-otherContact = ""
-otherDirection = ""
+#福州政府
+fzzfDirector = "备货"
+fzzfContact = "备货"
+fzzfDirection = "备货"
+
+#团购
+otherDirector = "团购备货"
+otherContact = "团购备货"
+otherDirection = "团购备货"
 
 
 #页脚总计
@@ -188,7 +193,9 @@ def personal_max_row(sheet,beginCol=1,beginRow=1):
     count = beginRow
     while sheet.cell(row=count, column=beginCol).value != None and\
             sheet.cell(row=count, column=beginCol).value != "None" and \
-            sheet.cell(row=count, column=beginCol).value != "" :
+            sheet.cell(row=count, column=beginCol).value != "" and\
+            "合计" not in str(sheet.cell(row=count, column=beginCol).value):
+
         count = count + 1
 
     tmpValue = str(sheet.cell(row=count-1, column=1).value)
@@ -325,7 +332,7 @@ def getDirectorByStore(store):
         return shengWeiDangXiaoDirector
     elif   "上城"in store:
         return shangChengQuDirector
-    elif   "市政府"in store or "市民中心" in store:
+    elif   "杭州市政府"in store or "市民中心" in store:
         return hangZhouShiZhengFuDirector
     elif   "临安"in store:
         return linAnDirector
@@ -341,8 +348,12 @@ def getDirectorByStore(store):
         return huanNengDirector
     elif "中大" in store:
         return zhongDaGuangChangDirector
-    else:
+    elif "福州" in store:
+        return fzzfDirector
+    elif "团购" in store:
         return otherDirector
+    else:
+        raise SyntaxError(store + ": " + "联系人判断失败")
 
 #根据店名获取联系方式
 def getContactByStore(store):
@@ -358,7 +369,7 @@ def getContactByStore(store):
         return shengWeiDangXiaoContact
     elif   "上城"in store:
         return shangChengQuContact
-    elif    "市政府"in store or "市民中心" in store:
+    elif    "杭州市政府"in store or "市民中心" in store:
         return hangZhouShiZhengFuContact
     elif   "临安"in store:
         return linAnContact
@@ -374,8 +385,12 @@ def getContactByStore(store):
         return huanNengContact
     elif "中大" in store:
         return zhongDaGuangChangContact
-    else:
+    elif "福州" in store:
+        return fzzfContact
+    elif "团购" in store:
         return otherContact
+    else:
+        raise SyntaxError(store + ": " + "联系方式判断失败")
 
 #根据店名获取地址
 def getDirectionByStore(store):
@@ -391,7 +406,7 @@ def getDirectionByStore(store):
         return shengWeiDangXiaoDirection
     elif   "上城"in store:
         return shangChengQuDirection
-    elif   "市政府"in store or "市民中心"in store:
+    elif   "杭州市政府"in store or "市民中心"in store:
         return hangZhouShiZhengFuDirection
     elif   "临安"in store:
         return linAnDirction
@@ -407,8 +422,47 @@ def getDirectionByStore(store):
         return huanNengDirection
     elif "中大" in store:
         return zhongDaGuangChangDirection
-    else:
+    elif "福州" in store:
+        return fzzfDirection
+    elif "团购" in store:
         return otherDirection
+    else:
+         raise SyntaxError(store + ": " + "地址判断失败")
+
+#根据店名输出正确名称
+def getCorrectNameByStore(store):
+    if   "天地"in store:
+        return "天地店"
+    elif   "集团"in store:
+        return "集团店"
+    elif   "国际"in store:
+        return "国际店"
+    elif   "江干"in store:
+        return "国际店"
+    elif   "党校"in store:
+        return "党校店"
+    elif   "上城"in store:
+        return "上城店"
+    elif   "杭州市政府"in store or "市民中心"in store:
+        return "市民中心店"
+    elif   "临安"in store:
+        return "临安店"
+    elif "义乌" in store:
+        return "义乌店"
+    elif "武义" in store:
+        return "武义店"
+    elif "庆春" in store:
+        return "庆春国家电网"
+    elif "萧山" in store:
+        return "萧山国家电网"
+    elif "环能" in store:
+        return "环能店"
+    elif "中大" in store:
+        return "中大广广场店"
+    elif "福州" in store:
+        return "福州店"
+    else:
+         return "其他"
 
 def doWork(readFilepath,outFilepath,sheetType,beginColForTypeTwo):
     #style 准备
@@ -564,8 +618,9 @@ def myUnion():
 
     if readFilepath != "":
         allFiles = file_name(readFilepath)
-
+        print(allFiles)
         for path in allFiles:
+            print(path)
             finalAllInputFiles.append(readFilepath + path)
             dictInfo = myUnionAux(readFilepath + path,resultBeginRowToUnion,dictInfo)
 
@@ -579,7 +634,7 @@ def myUnion():
         newSheet = newWb.create_sheet(title=key,index=tmpCount)
 
         #填写字段抬头
-        beginRow = 2
+        beginRow = 1
         newSheet.cell(row=beginRow,column=1,value=code) #国际条码
         newSheet.cell(row=beginRow,column=2,value=name) #商品名称
         newSheet.cell(row=beginRow,column=3,value=unit) #单位
@@ -593,64 +648,20 @@ def myUnion():
         #填写每个sheet（门店）的内容
         infoList = result[key]
         listSize = len(infoList)+2
-        listCount = beginRow
+        listCount = beginRow+1
         while listCount < listSize:
-            newSheet.cell(row=listCount, column=1, value=infoList[listCount][0])#国际条码
-            newSheet.cell(row=listCount, column=2, value=infoList[listCount][1])#商品名称
-            newSheet.cell(row=listCount, column=3, value=infoList[listCount][2])#单位
-            newSheet.cell(row=listCount, column=4, value=infoList[listCount][3])#规格
-            newSheet.cell(row=listCount, column=5, value=infoList[listCount][4])#调拨门店
-            newSheet.cell(row=listCount, column=6, value=infoList[listCount][5])#调拨数量
-            newSheet.cell(row=listCount, column=7, value=infoList[listCount][6])  #实际调拨数量
-            newSheet.cell(row=listCount, column=8, value=infoList[listCount][7])  #订单名称
-
-
+            newSheet.cell(row=listCount, column=1, value=infoList[listCount-2][0])#国际条码
+            newSheet.cell(row=listCount, column=2, value=infoList[listCount-2][1])#商品名称
+            newSheet.cell(row=listCount, column=3, value=infoList[listCount-2][2])#单位
+            newSheet.cell(row=listCount, column=4, value=infoList[listCount-2][3])#规格
+            newSheet.cell(row=listCount, column=5, value=infoList[listCount-2][4])#调拨门店
+            newSheet.cell(row=listCount, column=6, value=infoList[listCount-2][5])#调拨数量
+            newSheet.cell(row=listCount, column=7, value=infoList[listCount-2][6])  #实际调拨数量
+            newSheet.cell(row=listCount, column=8, value=infoList[listCount-2][7])  #订单名称
 
             listCount = listCount + 1
 
-        newSheet.cell(row=listCount + 2, column=1, value="合计")  # 合计
-        newSheet.cell(row=listCount + 3, column=1, value="合计装箱数（箱）")  # 合计装箱数（箱）
-
-
-        otherInfoKeyValueList=[("出库类型",transType),
-                               ("出库地点",outputPlace),
-                               ("出库联系人",outputPlaceName),
-                               ("出库联系人电话",outputPlaceContact),
-                               ("到货地点",getDirectionByStore(key)),
-                               ("联系人姓名",getDirectorByStore(key)),
-                                ("联系人电话",getContactByStore(key)),
-                                ("要求到达时间",arriveTime),
-                               ("调拨单号",outFilepath.split("/")[len(outFilepath.split("/")) - 1])]
-
-        specialIndex = 4
-        for item in otherInfoKeyValueList:
-            newSheet.cell(row=listCount + specialIndex, column=1, value=item[0])
-            newSheet.cell(row=listCount + specialIndex, column=2, value=item[1])
-            specialIndex = specialIndex + 1
-
-
-        # 格式处理
-        #调整宽度
-        newSheet.column_dimensions['B'].width = 20  # 国际条码
-        newSheet.column_dimensions['C'].width = 50  # 商品名称
-        newSheet.column_dimensions['D'].width = 15  # 单位
-        newSheet.column_dimensions['E'].width = 15  # 规格
-        newSheet.column_dimensions['F'].width = 15  # 调拨门店
-        newSheet.column_dimensions['G'].width = 15  # 调拨数量
-        newSheet.column_dimensions['H'].width = 30  # 供应商
-        newSheet.column_dimensions['I'].width = 30  # 实际调拨数量
-
         tmpCount = tmpCount + 1
-
-
-    #仓库填写
-    newSheet = newWb.create_sheet(title="仓库填写",index=tmpCount)
-    newSheet.cell(row=1, column=1, value="合计")
-    newSheet.cell(row=1, column=2, value="箱")
-    newSheet.cell(row=2, column=2, value="立方")
-    newSheet.cell(row=3, column=1, value="推荐物流")
-    newSheet.cell(row=4, column=1, value="推荐车型")
-    newSheet.cell(row=5, column=1, value="仓库填写完毕后邮件回发至相关人员")
 
 
     newWb.remove(newWb["Sheet"])
@@ -665,14 +676,68 @@ def myUnionAux(readFilepath,beginRow,dictInfo):
     # 默认可读写，若有需要可以指定write_only和read_only为True
     wb = load_workbook(readFilepath)
 
+    # 获取workbook中所有的表格
+    sheet_names = wb.sheetnames
+    print(sheet_names)
+    for each_sheet_name in sheet_names:
+        if "仓库填写" not in str(each_sheet_name):
+            sheet = wb[each_sheet_name]
+            # Map<key=门店名，值=list<(国际条码，商品名称，单位，规格，调拨门店，调拨数量)>>
+            # type,sheet,beginRow,beginColToStore=None
+            maxRow = personal_max_row(sheet,beginRow=2)
+            count = beginRow + 1
+
+            # 获取品名col位置
+            productNameIndex = getIndex("名", sheet, beginRow)
+            # 获取规格col位置
+            detailIndex = getIndex("规格", sheet, beginRow)
+            # 获取调拨数量col位置
+            productSizeIndex = getIndex("调拨数量", sheet, beginRow)
+            # 获取条形码col位置
+            codeIndex = getIndex("码", sheet, beginRow)
+            # 门店位置
+            shopIndex = getIndex("门店", sheet, beginRow)
+            # 单位位置
+            unitIndex = getIndex("单位", sheet, beginRow)
+            # 获取调拨数量col位置
+            realProductSizeIndex = getIndex("实际可调拨数量", sheet, beginRow)
+
+            while count <= maxRow:
+                # 判断门店
+                tmpStoreName = getCorrectNameByStore(getValue(sheet, count, shopIndex))  # sheet.cell(row=count, column=shopIndex).value
+                if tmpStoreName not in dictInfo.keys():
+                    dictInfo[tmpStoreName] = list()
+
+                dictInfo[tmpStoreName].append((
+                    getValue(sheet, count, codeIndex),
+                    getValue(sheet, count, productNameIndex),
+                    getValue(sheet, count, unitIndex),
+                    getValue(sheet, count, detailIndex),
+                    getValue(sheet, count, shopIndex),
+                    getValue(sheet, count, productSizeIndex),
+                    getValue(sheet, count, realProductSizeIndex),
+                    orderName
+                ))
+
+                count = count + 1
+    #test
+    print(dictInfo)
+    return dictInfo
+
+def tallyingStatementUnion(readFilepath,beginRow,dictInfo):
+    tmpList= readFilepath.split("/")
+    orderName = tmpList[len(tmpList)-1]
+    orderName = orderName.replace('.xlsx','')
+
+    print(readFilepath)
+    # 默认可读写，若有需要可以指定write_only和read_only为True
+    wb = load_workbook(readFilepath)
+
     # 获得当前正在显示的sheet, 也可以用wb.get_active_sheet()
     sheet = wb.active
 
-    # Map<key=门店名，值=list<(国际条码，商品名称，单位，规格，调拨门店，调拨数量)>>
-    # type,sheet,beginRow,beginColToStore=None
     maxRow = personal_max_row(sheet,beginRow=2)
     count = beginRow + 1
-
     # 获取品名col位置
     productNameIndex = getIndex("名", sheet, beginRow)
     # 获取规格col位置
@@ -687,27 +752,12 @@ def myUnionAux(readFilepath,beginRow,dictInfo):
     unitIndex = getIndex("单位", sheet, beginRow)
     # 获取调拨数量col位置
     realProductSizeIndex = getIndex("实际可调拨数量", sheet, beginRow)
-
     while count <= maxRow:
         # 判断门店
-        tmpStoreName = getValue(sheet, count, shopIndex)  # sheet.cell(row=count, column=shopIndex).value
-        if tmpStoreName not in dictInfo.keys():
-            dictInfo[tmpStoreName] = list()
+        tmpStoreName = getCorrectNameByStore(getValue(sheet, count, shopIndex))  # sheet.cell(row=count, column=shopIndex).value
 
-        dictInfo[tmpStoreName].append((
-            getValue(sheet, count, codeIndex),
-            getValue(sheet, count, productNameIndex),
-            getValue(sheet, count, unitIndex),
-            getValue(sheet, count, detailIndex),
-            getValue(sheet, count, shopIndex),
-            getValue(sheet, count, productSizeIndex),
-            getValue(sheet, count, realProductSizeIndex),
-            orderName
-        ))
 
         count = count + 1
-
-    return dictInfo
 
 ############ui function##############
 def getPath():
@@ -844,7 +894,7 @@ singlePathButton.grid(row=baseRow+5,column=baseColLeft)
 allPathButton=Button(root, text='所有调拨单路径', command=getAllInputPath,width=15)
 allPathButton.grid(row=baseRow+5,column=baseColLeft+1)
 
-saveButton=Button(root, text='保存', command=save,width=15)
+saveButton=Button(root, text='生成调拨单', command=save,width=15)
 saveButton.grid(row=baseRow+5,column=baseColLeft+2)
 
 saveButton=Button(root, text='合并', command=myUnion,width=15)
